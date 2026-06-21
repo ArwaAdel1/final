@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "cd backend && npm run dev",
     "start": "cd backend && npm start",
-    "seed": "cd backend && npm run seed",
-    "install": "cd backend && npm install"
+    "seed": "cd backend && npm run seed"
   }
 }
