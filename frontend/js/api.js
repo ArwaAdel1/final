@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+const API_BASE = window.BACKEND_URL || "/api";
 
 const getToken = () => localStorage.getItem("adminToken");
 
