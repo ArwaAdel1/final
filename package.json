@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "cd backend && npm run dev",
-    "start": "cd backend && npm start",
+     "start": "cd backend && npm install && node server.js",
     "seed": "cd backend && npm run seed"
+   
   }
 }
