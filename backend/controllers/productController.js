@@ -1,6 +1,6 @@
 const Product = require("../models/Product");
+const { uploadToCloudinary } = require("../middleware/upload");
 
-// GET /api/products
 const getProducts = async (req, res) => {
   try {
     const { category, subcategory, search, page = 1, limit = 12, active, priceMin, priceMax, sortBy, sortOrder } = req.query;
@@ -16,11 +16,9 @@ const getProducts = async (req, res) => {
       ];
     }
 
-    // Price filter
     if (priceMin) query.price = { ...query.price, $gte: Number(priceMin) };
     if (priceMax) query.price = { ...query.price, $lte: Number(priceMax) };
 
-    // Sort - default: oldest first (new products at end)
     let sortObj = { createdAt: 1 };
     if (sortBy) sortObj = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 
@@ -39,7 +37,6 @@ const getProducts = async (req, res) => {
   }
 };
 
-// GET /api/products/:id
 const getProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate("category").populate("subcategory");
@@ -50,10 +47,13 @@ const getProduct = async (req, res) => {
   }
 };
 
-// POST /api/products
 const createProduct = async (req, res) => {
   try {
-    const images = req.files ? req.files.map((f) => `/uploads/products/${f.filename}`) : [];
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      const uploads = req.files.map((f) => uploadToCloudinary(f.buffer, "shop/products"));
+      images = await Promise.all(uploads);
+    }
     const data = { ...req.body };
     if ("isActive" in data) data.isActive = data.isActive === "true" || data.isActive === true;
     if (data.subcategory === "" || data.subcategory === "null") delete data.subcategory;
@@ -65,13 +65,16 @@ const createProduct = async (req, res) => {
   }
 };
 
-// PUT /api/products/:id
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "المنتج مش موجود" });
 
-    const newImages = req.files ? req.files.map((f) => `/uploads/products/${f.filename}`) : [];
+    let newImages = [];
+    if (req.files && req.files.length > 0) {
+      const uploads = req.files.map((f) => uploadToCloudinary(f.buffer, "shop/products"));
+      newImages = await Promise.all(uploads);
+    }
     const keepImages = req.body.keepImages ? JSON.parse(req.body.keepImages) : product.images;
 
     const data = { ...req.body };
@@ -87,7 +90,6 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// DELETE /api/products/:id
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
@@ -98,7 +100,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// PATCH /api/products/:id/toggle
 const toggleProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);

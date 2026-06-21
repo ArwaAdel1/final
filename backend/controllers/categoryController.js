@@ -1,4 +1,5 @@
 const Category = require("../models/Category");
+const { uploadToCloudinary } = require("../middleware/upload");
 
 function slugify(text) {
   const arabicToLatin = {
@@ -20,7 +21,6 @@ function slugify(text) {
     .replace(/-+/g, "-");
 }
 
-// GET /api/categories
 const getCategories = async (req, res) => {
   try {
     const categories = await Category.find({ isActive: true }).sort({ order: 1, createdAt: 1 });
@@ -30,7 +30,6 @@ const getCategories = async (req, res) => {
   }
 };
 
-// POST /api/categories
 const createCategory = async (req, res) => {
   try {
     const data = { ...req.body };
@@ -55,11 +54,10 @@ const createCategory = async (req, res) => {
   }
 };
 
-// PUT /api/categories/:id
 const updateCategory = async (req, res) => {
   try {
     const data = { ...req.body };
-    delete data.slug; // Don't change slug on update
+    delete data.slug;
     const category = await Category.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
     if (!category) return res.status(404).json({ message: "القسم مش موجود" });
     res.json(category);
@@ -68,7 +66,6 @@ const updateCategory = async (req, res) => {
   }
 };
 
-// DELETE /api/categories/:id
 const deleteCategory = async (req, res) => {
   try {
     const hasChildren = await Category.countDocuments({ parent: req.params.id });
@@ -83,13 +80,12 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-// POST /api/categories/upload-icon
 const uploadCategoryIcon = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "من فضلك اختر صورة" });
     }
-    const url = "/uploads/categories/icons/" + req.file.filename;
+    const url = await uploadToCloudinary(req.file.buffer, "shop/categories/icons");
     res.json({ url });
   } catch (err) {
     res.status(500).json({ message: err.message });

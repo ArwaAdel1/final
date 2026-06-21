@@ -1,5 +1,12 @@
 {
-  "framework": null,
-  "buildCommand": null,
-  "outputDirectory": "."
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/frontend/$1" }
+  ],
+  "functions": {
+    "api/index.js": {
+      "memory": 256,
+      "maxDuration": 30
+    }
+  }
 }
